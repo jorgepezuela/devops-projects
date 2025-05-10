@@ -1,4 +1,20 @@
-resource "azurerm_resource_group" "kubernetes_resource_group" {
+#-------------------------------
+# Local Declarations
+#-------------------------------
+locals {
+  resource_group_name = element(coalescelist(data.azurerm_resource_group.rgrp[*].name, azurerm_resource_group.rg[*].name, [""]), 0)
+  location            = element(coalescelist(data.azurerm_resource_group.rgrp[*].location, azurerm_resource_group.rg[*].location, [""]), 0)
+}
+
+#---------------------------------------------------------
+# Resource Group Creation or selection - Default is "true"
+#---------------------------------------------------------
+data "azurerm_resource_group" "rgrp" {
+  count = var.create_resource_group == false ? 1 : 0
+  name  = var.resource_group_name
+}
+
+resource "azurerm_resource_group" "rg" {
   #ts:skip=AC_AZURE_0389 RSG lock should be skipped for now.
   count    = var.create_resource_group ? 1 : 0
   name     = lower(var.resource_group_name)
@@ -7,12 +23,45 @@ resource "azurerm_resource_group" "kubernetes_resource_group" {
 }
 
 #---------------------------------------------------------
+# SSH Key Creation or selection
+#---------------------------------------------------------
+
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+#---------------------------------------------------------
+# Windows Username and Passowrd
+#---------------------------------------------------------
+
+resource "random_string" "username" {
+  count   = var.windows_node_pool_enabled ? 1 : 0
+  length  = 17
+  special = false
+}
+
+resource "random_password" "password" {
+  count  = var.windows_node_pool_enabled ? 1 : 0
+  length = 17
+}
+
+#---------------------------------------------------------
+# Read AD Group IDs
+#---------------------------------------------------------
+
+data "azuread_group" "main" {
+  count        = length(var.rbac_aad_admin_group)
+  display_name = var.rbac_aad_admin_group[count.index]
+}
+
+#---------------------------------------------------------
 # Kubernetes Creation or selection
 #---------------------------------------------------------
 resource "azurerm_kubernetes_cluster" "main" {
   name                                = lower(var.name)
-  location                            = azurerm_resource_group.kubernetes_resource_group.location
-  resource_group_name                 = azurerm_resource_group.kubernetes_resource_group.name
+  location                            = local.location
+  resource_group_name                 = local.resource_group_name
   node_resource_group                 = var.node_resource_group
   dns_prefix                          = (var.private_cluster_enabled && var.private_dns_zone_id != "None" && var.private_dns_zone_id != "System") ? null : var.prefix
   dns_prefix_private_cluster          = (var.private_cluster_enabled && var.private_dns_zone_id != "None" && var.private_dns_zone_id != "System") ? var.prefix : null

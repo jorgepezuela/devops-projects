@@ -1,24 +1,55 @@
-variable "name" {
-}
-
+#-------------------------------
+# Common Variables
+#-------------------------------
 variable "location" {
-  default = "westeurope"
+  type        = string
+  default     = "westeurope"
+  description = "Name of the default object location."
 }
 
-variable "network_address_space" {
+variable "name" {
+  type        = string
+  description = "Name of the Azure Container Registry."
 }
 
-variable "aks_subnet_address_prefix" {
+variable "resource_group_name" {
+  type        = string
+  default     = "acr-resource-group"
+  description = "Name of the Azure Container Registry resource group."
 }
 
-variable "aks_subnet_address_name" {
+variable "create_resource_group" {
+  description = "Whether to create resource group and use it for all networking resources"
+  default     = true
+  type        = bool
 }
 
-variable "appgw_subnet_address_prefix" {
+variable "address_space" {
+  type        = list(string)
+  description = "The address space that is used the virtual network."
 }
 
-variable "appgw_subnet_address_name" {
+variable "dns_servers" {
+  type        = list(string)
+  description = "The list of DNS server IP addresses."
 }
 
-variable "environment" {
+variable "bgp_community" {
+  type        = string
+  description = "The BGP community to be used for the virtual network."
+}
+
+variable "edge_zone" {
+  type        = string
+  description = "The edge zone to be used for the virtual network."
+}
+
+variable "flow_timeout_in_minutes" {
+  type        = number
+  description = "The flow timeout in minutes for the virtual network."
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to all resources created."
 }

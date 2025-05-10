@@ -1,34 +1,38 @@
-resource "azurerm_resource_group" "vnet_resource_group" {
-  name     = "${var.name}-rg"
+#-----------------------------------
+# Local Declarations
+#-----------------------------------
+locals {
+  resource_group_name = element(coalescelist(data.azurerm_resource_group.rgrp[*].name, azurerm_resource_group.rg[*].name, [""]), 0)
+}
+
+#-----------------------------------
+# Resources
+#-----------------------------------
+
+data "azurerm_resource_group" "rgrp" {
+  name = var.resource_group_name
+  count = var.create_resource_group == false ? 1 : 0
+}
+
+resource "azurerm_resource_group" "rg" {
+  name     = lower(var.resource_group_name)
   location = var.location
-  
-  tags = {
-    Environment = var.environment
-  }
+  tags     = merge({ "ResourceName" = format("%s", var.resource_group_name) }, var.tags, )
+  count    = var.create_resource_group ? 1 : 0
 }
 
-resource "azurerm_virtual_network" "virtual_network" {
-  name = var.name
-  location = var.location
-  resource_group_name = azurerm_resource_group.vnet_resource_group.name
-  address_space = [var.network_address_space]
+#-----------------------------------
+# Virtual Network
+#-----------------------------------
+resource "azurerm_virtual_network" "vnet" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  address_space       = var.address_space
+  dns_servers         = var.dns_servers
+  bgp_community       = var.bgp_community
+  edge_zone           = var.edge_zone
+  flow_timeout_in_minutes = var.flow_timeout_in_minutes
 
-  tags = {
-    Environment = var.environment
-  }
-
-}
-
-resource "azurerm_subnet" "aks_subnet" {
-  name = var.aks_subnet_address_name
-  resource_group_name  = azurerm_resource_group.vnet_resource_group.name
-  virtual_network_name = azurerm_virtual_network.virtual_network.name
-  address_prefixes = [var.aks_subnet_address_prefix]
-}
-
-resource "azurerm_subnet" "appgw_subnet" {
-  name = var.appgw_subnet_address_name
-  resource_group_name  = azurerm_resource_group.vnet_resource_group.name
-  virtual_network_name = azurerm_virtual_network.virtual_network.name
-  address_prefixes = [var.appgw_subnet_address_prefix]
+  tags                = merge({ "ResourceName" = lower(var.name) }, var.tags, )
 }
