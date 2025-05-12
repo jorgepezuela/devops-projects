@@ -1,0 +1,131 @@
+parameters:
+  - name: environment
+    type: string
+  - name: component
+    type: string
+
+stages:
+
+  - stage: planTerraform_${{ parameters.environment }}
+    displayName: Terraform - Plan - ${{ parameters.environment }}
+    variables:
+      - template: ../vars/${{ parameters.environment }}.yaml
+
+    jobs:
+
+      - deployment: TerraformJobs
+        displayName: Terraform > install, init & plan
+        environment:
+          name: ${{ parameters.environment }}
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                - checkout: self
+                - checkout: naming
+                - checkout: kubernetes
+
+                - template: ../templates/tfplan-template.yaml
+                  parameters:
+                    environment: ${{ parameters.environment }}
+                    subscription: ${{ variables.subscription_id }}
+                    component: ${{ parameters.component }}
+
+  - stage: autoTerraform_${{ parameters.environment }}
+    displayName: Terraform - Auto Approval - ${{ parameters.environment }}
+    variables:
+      - template: ../vars/${{ parameters.environment }}.yaml
+    dependsOn:
+      - planTerraform_${{ parameters.environment }}
+    condition: |
+      and
+        (
+          succeeded(),
+          eq(dependencies.planTerraform_${{ parameters.environment }}.outputs['TerraformJobs.TerraformJobs.setvar.approvalRequired'], 'false')
+        )
+
+    jobs:
+
+      - deployment: TerraformAuto
+        displayName: Terraform > install, init & apply
+        environment:
+          name: ${{ parameters.environment }}
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                - checkout: self
+                - checkout: naming
+                - checkout: kubernetes
+
+                - template: ../templates/tfapply-template.yaml
+                  parameters:
+                    environment: ${{ parameters.environment }}
+                    subscription: ${{ variables.subscription_id }}
+                    component: ${{ parameters.component }}
+
+  - stage: approveTerraform_${{ parameters.environment }}
+    displayName: Terraform - Manual Approval - ${{ parameters.environment }}
+    variables:
+      - template: ../vars/${{ parameters.environment }}.yaml
+    dependsOn:
+      - planTerraform_${{ parameters.environment }}
+    condition: |
+      and
+        (
+          succeeded(),
+          eq(dependencies.planTerraform_${{ parameters.environment }}.outputs['TerraformJobs.TerraformJobs.setvar.approvalRequired'], 'true')
+        )
+
+    jobs:
+
+      - job: waitForValidation
+        displayName: Wait > Wait for manual appoval
+        pool: server
+        timeoutInMinutes: 4320
+
+        steps:
+
+          - task: ManualValidation@0
+            timeoutInMinutes: 1440
+            inputs:
+              instructions: There are resources being modified as part of this deployment, please review the output of Terraform plan before approving.
+              onTimeout: reject
+
+      - deployment: TerraformApprove
+        displayName: Terraform > install, init & apply
+        dependsOn: waitForValidation
+        environment:
+          name: ${{ parameters.environment }}
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                - checkout: self
+                - checkout: naming
+                - checkout: kubernetes
+
+                - template: ../templates/tfapply-template.yaml
+                  parameters:
+                    environment: ${{ parameters.environment }}
+                    subscription: ${{ variables.subscription_id }}
+                    component: ${{ parameters.component }}
+
+  - stage: EndTerraform_${{ parameters.environment }}
+    displayName: Terraform - End - ${{ parameters.environment }}
+    dependsOn:
+      - planTerraform_${{ parameters.environment }}
+    condition: succeeded()
+
+    jobs:
+
+      - job: TerraformEnd
+        displayName: Terraform > End
+        steps:
+          - checkout: none

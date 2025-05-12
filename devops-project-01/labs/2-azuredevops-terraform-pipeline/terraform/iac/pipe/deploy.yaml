@@ -1,0 +1,37 @@
+name: $(BuildDefinitionName)-$(Build.SourceBranchName)-$(Date:yyyyMMdd.HHmmss)
+
+resources:
+  repositories:
+    - repository: naming
+      type: git
+      name: ops-terraform-modules/terraform-azurerm-naming
+    - repository: kubernetes
+      type: git
+      name: ops-terraform-modules/terraform-azurerm-kubernetes
+
+parameters:
+  - name: component
+    type: string
+    default: cluster
+    displayName: Component to Install
+    values:
+      - common
+      - cluster
+      - keyvault
+  - name: environment
+    type: string
+    default: "prd"
+    displayName: Environment
+    values:
+      - dev
+      - stg
+pool: linux-k8s
+
+trigger: none
+
+stages:
+
+  - template: ./env/all.yaml
+    parameters:
+      environment: ${{ parameters.environment }}
+      component: ${{ parameters.component }}
