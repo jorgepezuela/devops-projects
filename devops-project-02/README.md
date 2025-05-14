@@ -17,7 +17,7 @@ Deploy a Modular and Scalable Virtual Network Architecture with Amazon VPC.
 ## Pre-Requisites
 
 1. You must be having an [AWS account](https://aws.amazon.com/) to create infrastructure resources on AWS cloud.
-2. [Source Code](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/html-web-app)
+2. [Source Code](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02/html-web-app)
 
 ## Pre-Deployment
 
