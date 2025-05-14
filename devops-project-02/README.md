@@ -4,11 +4,11 @@
 
 ### TABLE OF CONTENTS
 
-1. [Goal](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/README.md#goal)
-2. [Pre-Requisites](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/README.md#pre-requisites)
-3. [Pre-Deployment](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/README.md#pre-deployment)
-4. [VPC Deployment](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/README.md#vpc-deployment)
-5. [Validation](https://github.com/jorgepezuela/DevOps-Projects/blob/master/DevOps-Project-02/README.md#validation)
+1. [Goal](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02#goal)
+2. [Pre-Requisites](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02#pre-requisites)
+3. [Pre-Deployment](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02#pre-deployment)
+4. [VPC Deployment](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02#vpc-deployment)
+5. [Validation](https://github.com/jorgepezuela/devops-projects/tree/develop/devops-project-02#validation)
 
 ## Goal
 
