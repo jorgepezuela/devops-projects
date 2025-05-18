@@ -1,0 +1,77 @@
+name: EKS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: eu-west-1
+  CLUSTER_NAME: devops-cluster
+  NAMESPACE: default
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: terraform
+
+      - name: Plan Terraform
+        run: terraform plan -out=tfplan
+        working-directory: terraform
+
+      - name: Apply Terraform
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+        working-directory: terraform
+
+  kubernetes:
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: |
+          curl -o kubectl "https://amazon-eks.s3.us-west-2.amazonaws.com/1.27.4/2024-04-18/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          mv ./kubectl /usr/local/bin/kubectl
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      - name: Configure AWS IAM Authenticator
+        run: |
+          curl -o aws-iam-authenticator "https://amazon-eks.s3.us-west-2.amazonaws.com/1.27.4/2024-04-18/bin/linux/amd64/aws-iam-authenticator"
+          chmod +x ./aws-iam-authenticator
+          mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Deploy Nginx
+        run: kubectl apply -f manifests/nginx-deployment.yaml
