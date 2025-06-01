@@ -138,8 +138,8 @@ resource "azurerm_servicebus_queue" "queue01" {
   default_message_ttl                     = "P14D"
   dead_lettering_on_message_expiration    = false
   duplicate_detection_history_time_window = "PT10M"
-  enable_batched_operations               = true
-  enable_partitioning                     = false
+  batched_operations_enabled              = true
+  partitioning_enabled                    = false
   lock_duration                           = "PT1M"
   max_delivery_count                      = 10
   max_size_in_megabytes                   = 1024
@@ -155,8 +155,8 @@ resource "azurerm_servicebus_queue" "queue02" {
   default_message_ttl                     = "P14D"
   dead_lettering_on_message_expiration    = false
   duplicate_detection_history_time_window = "PT10M"
-  enable_batched_operations               = true
-  enable_partitioning                     = false
+  batched_operations_enabled              = true
+  partitioning_enabled                    = false
   lock_duration                           = "PT1M"
   max_delivery_count                      = 10
   max_size_in_megabytes                   = 1024
