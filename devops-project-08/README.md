@@ -22,9 +22,6 @@ In addition to creating an example pipeline, we'll also add enhanced capabilitie
 
 * Demonstrating how we can scale with multiple deployments
 
-
-> *If you'd like to skip straight to the download of the example pipeline and Terraform code, it can be found on* [*GitHub*](https://github.com/NotHarshhaa/DevOps-Projects/tree/master/DevOps-Project-20/terraform)*.*
-
 ### **Overall Topology**
 
 In this diagram, we can see all of the different supporting components required to deploy the Terraform code and the actual Service Bus instance itself -
